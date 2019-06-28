@@ -58,8 +58,8 @@ class GetdataAsin
   attr_accessor :urls
   
   def initialize(insert_data)
+    $retries = 3
     $completed = true
-    $retries = 1
     @urls = []
     $total_asin = []
     insert_data.last_page.times {|i| urls.push("https://www.amazon.co.jp/s?__mk_ja_JP=%E3%82%AB%E3%82%BF%E3%82%AB%E3%83%8A&i=aps&k=#{insert_data.keyword}&page=#{i+1}&ref=nb_sb_noss&url=search-alias%3Daps")}
@@ -97,7 +97,7 @@ parser_data = Parser.new(get_data)
 rescue => exception
   puts exception
   puts "Wait for 3 minutes and Retry"
-  sleep 3 # 3 minutes
+  sleep 180 # 3 minutes
   $retries -= 1
   retry if $retries > 0 
   $completed = false
