@@ -1,6 +1,7 @@
 require 'nokogiri'
 require 'open-uri'
 require 'csv'
+require 'thread'
 
 class Notice
 
@@ -35,6 +36,10 @@ class Notice
   def loading
     "== "
   end
+
+  def error
+    "= = = = = = = = = = ERROR = = = TRY AGAIN LATER = = = = = = = = = "
+  end
 end
 
 class InsertData < Notice
@@ -53,7 +58,8 @@ class GetdataAsin
   attr_accessor :urls
   
   def initialize(insert_data)
-    $retries = 4
+    $completed = true
+    $retries = 1
     @urls = []
     $total_asin = []
     insert_data.last_page.times {|i| urls.push("https://www.amazon.co.jp/s?__mk_ja_JP=%E3%82%AB%E3%82%BF%E3%82%AB%E3%83%8A&i=aps&k=#{insert_data.keyword}&page=#{i+1}&ref=nb_sb_noss&url=search-alias%3Daps")}
@@ -64,7 +70,6 @@ insert_data = InsertData.new
 get_data = GetdataAsin.new(insert_data)
 
 begin
-
   class Parser < Notice
 
     def initialize(insert_data)
@@ -87,26 +92,29 @@ begin
     end
   end
 
-  class InsertCsv < Notice
-    def initialize(insert_data)
-      CSV.open("#{insert_data.keyword}_asin_amazonjp.csv", 'wb') do |csv|
-        $total_asin.each do |item|
-          csv << [item, "\n"]
-        end
-      end
-      puts complete
-    end
-  end
-
 parser_data = Parser.new(get_data)
-InsertCsv.new(insert_data)
 
 rescue => exception
   puts exception
   puts "Wait for 3 minutes and Retry"
-  sleep(180) # 3 minutes
+  sleep 3 # 3 minutes
   $retries -= 1
-  binding.pry
   retry if $retries > 0 
-  return puts "#{exception}, Try Again Later" 
+  $completed = false
+  puts "#{exception}, TRY AGAIN LATER" 
 end
+
+class InsertCsv < Notice
+  def initialize(insert_data)
+    CSV.open("#{insert_data.keyword}_asin_amazonjp.csv", 'wb') do |csv|
+      $total_asin.each do |item|
+        csv << [item, "\n"]
+      end
+    end
+    current_directory = Dir.pwd + "/" + "#{insert_data.keyword}_asin_amazonjp.csv"
+    return puts error if $completed == false
+    puts complete
+    puts "CHECK #{insert_data.keyword} ASIN AT  #{current_directory}"
+  end
+end
+InsertCsv.new(insert_data)
