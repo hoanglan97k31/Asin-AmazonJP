@@ -1,9 +1,9 @@
 require 'nokogiri'
 require 'open-uri'
-require 'pry'
+# require 'pry'
 require 'csv'
 
-class NoticeDefault
+class Notice
 
   ## NOTICE
   def insert_keyword
@@ -11,7 +11,7 @@ class NoticeDefault
   end
 
   def insert_last_page
-     "= = = = = = = = = = INSERT LAST PAGE = = = = = = = = = = = = = = = ="
+    "= = = = = = = = = = INSERT LAST PAGE = = = = = = = = = = = = = = = ="
   end
 
   def nil_keyword
@@ -39,7 +39,7 @@ class NoticeDefault
   end
 end
 
-class InsertData < NoticeDefault
+class InsertData < Notice
     attr_accessor :keyword, :last_page
 
     def initialize
@@ -61,7 +61,7 @@ class GetdataAsin
   end
 end
 
-class Parser < NoticeDefault
+class Parser < Notice
 
   def initialize(insert_data)
     ## Function
@@ -76,14 +76,15 @@ class Parser < NoticeDefault
         end
       end
       $total_asin = $total_asin + asin_array
-      print loading
+      puts loading
     }
-    p complete_get_asin
-    p insert_to_csv
+    puts complete_get_asin
+    puts insert_to_csv
+    binding.pry
   end
 end
 
-class InsertCsv < NoticeDefault
+class InsertCsv < Notice
   def initialize(insert_data)
     CSV.open("#{insert_data.keyword}_asin_amazonjp.csv", 'wb') do |csv|
       $total_asin.each do |item|
